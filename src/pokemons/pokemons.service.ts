@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
 import { PaginationDto } from '../shared/dtos/pagination.dto';
@@ -11,10 +11,11 @@ export class PokemonsService {
   paginatedPokemonsCache = new Map<string, Pokemon[]>();
 
   create(createPokemonDto: CreatePokemonDto) {
-    return 'This action adds a new pokemon';
+    return Promise.resolve(`This action adds a: ${createPokemonDto.name}`);
   }
 
   async findAll(paginationDto: PaginationDto): Promise<Pokemon[]> {
+    console.log('Findall llamado');
     const { limit = 10, page = 1 } = paginationDto;
     const offset = (page - 1) * limit;
 
@@ -39,21 +40,26 @@ export class PokemonsService {
     return pokemons;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} pokemon`;
+  async findOne(id: number) {
+    return await this.getPokemonInformation(id);
   }
 
   update(id: number, updatePokemonDto: UpdatePokemonDto) {
-    return `This action updates a #${id} pokemon`;
+    return Promise.resolve(`This action updates a #${id} pokemon`);
   }
 
   remove(id: number) {
-    return `This action removes a #${id} pokemon`;
+    return Promise.resolve(`This action removes a #${id} pokemon`);
   }
 
   private async getPokemonInformation(id: number): Promise<Pokemon> {
     const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+
+    if (response.status === 404) {
+      throw new NotFoundException(`Pokemon with id ${id} not found`);
+    }
     const data = (await response.json()) as PokeapiPokemonResponse;
+
     return {
       id: data.id,
       name: data.name,

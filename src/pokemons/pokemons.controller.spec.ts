@@ -90,12 +90,15 @@ describe('PokemonsController', () => {
 
     const spy = jest
       .spyOn(service, 'update')
-      .mockImplementation(() => Promise.resolve('Pokemon updated'));
+      .mockImplementation(() =>
+        Promise.resolve({ ...mockPokemons[0], name: newData.name }),
+      );
 
     const result = await controller.update(pokemonId, newData);
 
     expect(spy).toHaveBeenCalledWith(+pokemonId, newData);
-    expect(result).toBe('Pokemon updated');
+    expect(result).toHaveProperty('name');
+    expect(result.name).toBe(newData.name);
   });
 
   it('should have called delete with the correct id (delete)', async () => {

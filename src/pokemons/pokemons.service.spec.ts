@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { PokemonsService } from './pokemons.service';
 
@@ -19,11 +19,21 @@ describe('PokemonsService', () => {
   });
 
   it('should create a pokemon', async () => {
-    const data = { name: 'Pikachu', type: 'electrik' };
+    const data = {
+      id: new Date().getDate(),
+      name: 'Pikachu',
+      type: 'electrik',
+    };
 
     const result = await service.create(data);
 
-    expect(result).toBe(`This action adds a: ${data.name}`);
+    expect(result).toEqual({
+      hp: 0,
+      id: data.id,
+      name: data.name,
+      sprites: [],
+      type: data.type,
+    });
   });
 
   it('should return pokemon if exists', async () => {
@@ -67,5 +77,57 @@ describe('PokemonsService', () => {
         hp: expect.any(Number),
       }),
     );
+  });
+
+  // --
+
+  it('should find all pokemons in cache', async () => {
+    const paginationDto = { limit: 5, page: 1 };
+
+    const cachedPokemons = [
+      { id: 1, name: 'Bulbasaur', type: 'grass', hp: 45, sprites: [] },
+      { id: 2, name: 'Ivysaur', type: 'grass', hp: 60, sprites: [] },
+    ];
+
+    service.paginatedPokemonsCache.set('5-1', cachedPokemons);
+
+    const result = await service.findAll(paginationDto);
+    expect(result).toEqual(cachedPokemons);
+  });
+
+  it('should return BadRequestException error if pokemon name already exist', async () => {
+    const pokemon = {
+      id: 1,
+      name: 'Bulbasaur',
+      type: 'grass',
+      hp: 45,
+      sprites: [],
+    };
+
+    service.pokemonCache.set(pokemon.id, pokemon);
+
+    const createPokemonDto = {
+      name: 'Bulbasaur',
+      type: 'grass',
+    };
+
+    try {
+      await service.create(createPokemonDto);
+      fail('Expected BadRequestException was not thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(BadRequestException);
+      expect(error.message).toBe(
+        `Pokemon with name ${pokemon.name} already exists`,
+      );
+    }
+
+    // await expect(service.create(createPokemonDto)).rejects.toThrow(
+    //   new BadRequestException('hi'),
+    // );
+
+    // await expect(service.findOne(pokemonId)).rejects.toThrow();
+    // await expect(service.findOne(pokemonId)).rejects.toThrow(
+    //   `Pokemon with id ${pokemonId} not found`,
+    // );
   });
 });

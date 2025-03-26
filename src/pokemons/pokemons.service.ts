@@ -15,10 +15,10 @@ export class PokemonsService {
   paginatedPokemonsCache = new Map<string, Pokemon[]>();
   pokemonCache = new Map<number, Pokemon>();
 
-  create(createPokemonDto: CreatePokemonDto, id = new Date().getDate()) {
+  create(createPokemonDto: CreatePokemonDto) {
     const pokemon: Pokemon = {
       ...createPokemonDto,
-      id,
+      id: new Date().getDate(),
       hp: createPokemonDto.hp ?? 0,
       sprites: createPokemonDto.sprites ?? [],
     };
@@ -73,10 +73,6 @@ export class PokemonsService {
 
   async update(id: number, updatePokemonDto: UpdatePokemonDto) {
     const pokemon = await this.findOne(id);
-
-    if (!pokemon) {
-      throw new BadRequestException(`Pokemon with id ${id} not found`);
-    }
 
     const updatedPokemon = {
       ...pokemon,

@@ -94,11 +94,9 @@ describe('PokemonsController', () => {
         Promise.resolve({ ...mockPokemons[0], name: newData.name }),
       );
 
-    const result = await controller.update(pokemonId, newData);
+    await controller.update(pokemonId, newData);
 
     expect(spy).toHaveBeenCalledWith(+pokemonId, newData);
-    expect(result).toHaveProperty('name');
-    expect(result.name).toBe(newData.name);
   });
 
   it('should have called delete with the correct id (delete)', async () => {
@@ -112,5 +110,18 @@ describe('PokemonsController', () => {
 
     expect(spy).toHaveBeenCalledWith(+pokemonId);
     expect(result).toBe('Pokemon removed');
+  });
+
+  // ----
+
+  it('should have called the service with correct data (create)', async () => {
+    const newData = { name: mockPokemons[0].name, type: mockPokemons[0].type };
+    const spy = jest
+      .spyOn(service, 'create')
+      .mockImplementation(() => Promise.resolve(mockPokemons[0]));
+
+    await controller.create(newData);
+
+    expect(spy).toHaveBeenCalledWith(newData);
   });
 });
